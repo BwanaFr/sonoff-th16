@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Temperature</title>
+  	<script src="/www/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+	<script src="https://code.highcharts.com/highcharts.js"></script>
+	<script src="https://code.highcharts.com/highcharts-more.js"></script>
+	<script src="https://code.highcharts.com/modules/solid-gauge.js"></script>
+	<script src="https://code.highcharts.com/modules/exporting.js"></script>
+	<script src="https://code.highcharts.com/modules/export-data.js"></script>
+	<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+  </head>
+  <body>
+	<div>
+		<div id="container-temperature"></div>
+		<div id="container-humidity"></div>
+	</div>
+	<script>
+	var gaugeOptions = {
+		chart: {
+			type: 'solidgauge'
+		},
+
+		title: null,
+
+		pane: {
+			center: ['50%', '50%'],
+			size: '100%',
+			startAngle: -90,
+			endAngle: 90,
+			background: {
+				backgroundColor:
+					Highcharts.defaultOptions.legend.backgroundColor || '#EEE',
+				innerRadius: '60%',
+				outerRadius: '100%',
+				shape: 'arc'
+			}
+		},
+
+		exporting: {
+			enabled: false
+		},
+
+		tooltip: {
+			enabled: false
+		},
+
+		// the value axis
+		yAxis: {
+			stops: [
+				[0.0, '#55BF3B'], // green
+				[0.5, '#DDDF0D'], // yellow
+				[1.0, '#DF5353'] // red
+			],
+			lineWidth: 0,
+			tickWidth: 2,
+			minorTickInterval: null,
+			tickInterval: 5,
+			title: {
+				y: 50
+			},
+			labels: {
+				y: 16
+			}
+		},
+
+		plotOptions: {
+			solidgauge: {
+				dataLabels: {
+					y: -50,
+					borderWidth: 0,
+					useHTML: true
+				}
+			}
+		}
+	};
+	// The temperature gauge
+	var chartTemperature = Highcharts.chart('container-temperature', Highcharts.merge(gaugeOptions, {
+		yAxis: {
+			min: -20,
+			max: 50,
+			title: {
+				text: 'Temperature'
+			}
+		},
+
+		credits: {
+			enabled: false
+		},
+
+		series: [{
+			name: 'Temperature',
+			data: [0],
+			dataLabels: {
+				format:
+					'<div style="text-align:center">' +
+					'<span style="font-size:25px">{y}</span>' +
+					'<span style="font-size:12px;opacity:0.4">&degC</span>' +
+					'</div>'
+			},
+			tooltip: {
+				valueSuffix: ' &degC'
+			}
+		}]
+	}));
+	// The humidity gauge
+	var chartHumidity = Highcharts.chart('container-humidity', Highcharts.merge(gaugeOptions, {
+		yAxis: {
+			min: 0,
+			max: 100,
+			title: {
+				text: 'Humidity'
+			}
+		},
+
+		credits: {
+			enabled: false
+		},
+
+		series: [{
+			name: 'Humidity',
+			data: [0],
+			dataLabels: {
+				format:
+					'<div style="text-align:center">' +
+					'<span style="font-size:25px">{y}</span>' +
+					'<span style="font-size:12px;opacity:0.4">&#37</span>' +
+					'</div>'
+			},
+			tooltip: {
+				valueSuffix: ' &#37;'
+			}
+		}]
+	}));
+	var evtSource = new EventSource("/events");
+	evtSource.addEventListener("value", function(e) {
+	  var data = JSON.parse(e.data);
+	  var point,
+					newVal,
+					inc;
+
+				if (chartTemperature) {
+					point = chartTemperature.series[0].points[0];					
+					point.update(data.temperature);					
+				}
+				if(chartHumidity){
+					point = chartHumidity.series[0].points[0];					
+					point.update(data.humidity);			
+				}
+	}, false);
+	
+	</script>
+  </body>
+  
+</html>
